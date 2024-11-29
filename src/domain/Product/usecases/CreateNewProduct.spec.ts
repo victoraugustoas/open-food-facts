@@ -14,13 +14,6 @@ describe('CreateNewProduct', () => {
     };
   });
 
-  test('deve criar um novo produto', async () => {
-    const product = new ProductBuilder().build();
-
-    expect(product.itWorked).toBe(true);
-    expect(product.instance).toMatchObject(product.instance);
-  });
-
   test('deve criar um novo produto no repositório', async () => {
     const product = new ProductBuilder();
 
@@ -32,6 +25,9 @@ describe('CreateNewProduct', () => {
     expect(result.itWorked).toBe(true);
     expect(result).toMatchObject(
       Result.ok({ product: product.build().instance }),
+    );
+    expect(ProductRepositoryMock.save).toHaveBeenCalledWith(
+      product.build().instance,
     );
   });
 });
