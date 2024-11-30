@@ -2,7 +2,6 @@ import { Entity, EntityProps, Identity } from '../../common/base/Entity';
 import { Category } from './Category';
 import { Label } from './Label';
 import { Timestamp } from '../../common/types/Timestamp';
-import { Ingredients } from './Ingredients';
 import { City } from './Cities';
 import { MarketStore } from './MarketStore';
 import { Url } from '../../common/types/Url';
@@ -37,7 +36,7 @@ export interface ProductProps extends EntityProps {
   cities: string[];
   purchase_places: string[];
   stores: 'Lidl';
-  ingredients_text: string[];
+  ingredients_text: string;
   traces: string[];
   serving_size: string;
   serving_quantity: number;
@@ -50,11 +49,12 @@ export interface ProductProps extends EntityProps {
 export class Product extends Entity<Product, ProductID, ProductProps> {
   protected constructor(
     readonly id: ProductID,
+    readonly imported_t: Date,
+    readonly status: ProductStatus,
     readonly categories: Category[],
     readonly labels: Label[],
     readonly cities: City[],
     readonly purchasePlaces: MarketStore[],
-    readonly ingredients: Ingredients[],
     readonly traces: Trace[],
     readonly props: ProductProps,
     readonly url?: Url,
@@ -75,9 +75,6 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
       const purchase_places = Result.combine(
         props.purchase_places.map((c) => MarketStore.new(c)),
       );
-      const ingredients = Result.combine(
-        props.ingredients_text.map((i) => Ingredients.new(i)),
-      );
       const traces = Result.combine(props.traces.map((t) => Trace.new(t)));
       const url: Result<Url> | Result<undefined> = props.url
         ? Url.new(props.url)
@@ -94,7 +91,6 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
         labels,
         cities,
         purchase_places,
-        ingredients,
         traces,
         image_url,
       ]);
@@ -102,12 +98,13 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
 
       return Result.ok(
         new Product(
-          new ProductID(props.id),
+          new ProductID(props.code),
+          props.imported_t,
+          props.status,
           categories.instance,
           labels.instance,
           cities.instance,
           purchase_places.instance,
-          ingredients.instance,
           traces.instance,
           props,
           url.instance,

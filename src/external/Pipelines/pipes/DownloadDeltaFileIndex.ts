@@ -40,12 +40,17 @@ export class DownloadDeltaFileIndex {
           });
           await importedFile.save();
           importId = importedFile.id;
+          this.eventEmitter.emit(
+            DownloadDeltaFileEvent.name,
+            new DownloadDeltaFileEvent(file, importId.toString()),
+          );
         }
-
-        this.eventEmitter.emit(
-          DownloadDeltaFileEvent.name,
-          new DownloadDeltaFileEvent(file, importId.toString()),
-        );
+        if (exists && !exists.wasProcessed) {
+          this.eventEmitter.emit(
+            DownloadDeltaFileEvent.name,
+            new DownloadDeltaFileEvent(file, importId.toString()),
+          );
+        }
       }
     } catch (e) {
       this.logger.error(e);

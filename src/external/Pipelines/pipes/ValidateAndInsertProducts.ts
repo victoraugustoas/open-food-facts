@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as readline from 'node:readline';
-import { Product, ProductProps } from '../../../domain/Product/model/Product';
+import { ProductProps } from '../../../domain/Product/model/Product';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreatedDeltaFileEvent } from '../events/CreatedDeltaFile.event';
 import { OnEvent } from '@nestjs/event-emitter';
@@ -41,15 +41,10 @@ export class ValidateAndInsertProducts {
       const totalLines = Number(process.env.ITEMS_TO_IMPORT_PER_FILE);
       let indexLine = 0;
       for await (const line of rl) {
-        if (indexLine > totalLines) break;
+        indexLine += 1;
+
         const parseLine = JSON.parse(line);
         const props = this.normalizeProduct(parseLine);
-        const product = Product.new(props);
-
-        if (product.wentWrong) {
-          // TODO track error for file
-          continue;
-        }
 
         const createNewProductUseCase = new CreateNewProduct(
           this.productRepository,
@@ -57,9 +52,8 @@ export class ValidateAndInsertProducts {
         const created = await createNewProductUseCase.execute(props);
         if (created.wentWrong) {
           this.logger.error('Error in createNewProductUseCase', created.errors);
-          continue;
         }
-        indexLine += 1;
+        if (indexLine >= totalLines) break;
       }
 
       importedFile.wasProcessed = true;
@@ -73,7 +67,7 @@ export class ValidateAndInsertProducts {
 
   private toArrayIfEmpty<T>(prop: any): T[] {
     if (prop) {
-      return prop.replace(', ', ',').split(',');
+      return prop.replaceAll(', ', ',').split(',');
     } else {
       return [];
     }
@@ -93,7 +87,6 @@ export class ValidateAndInsertProducts {
       labels: this.toArrayIfEmpty(objectProduct['labels']),
       cities: this.toArrayIfEmpty(objectProduct['cities']),
       purchase_places: this.toArrayIfEmpty(objectProduct['purchase_places']),
-      ingredients_text: this.toArrayIfEmpty(objectProduct['ingredients_text']),
       traces: this.toArrayIfEmpty(objectProduct['traces']),
     };
   }

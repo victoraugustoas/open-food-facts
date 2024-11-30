@@ -40,7 +40,7 @@ export class Product implements ProductProps {
   @Prop()
   stores: 'Lidl';
   @Prop()
-  ingredients_text: string[];
+  ingredients_text: string;
   @Prop()
   traces: string[];
   @Prop()
