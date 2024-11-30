@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ImportProductsService } from './ImportProducts.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { HttpModule } from '@nestjs/axios';
+import { PipelineModule } from '../Pipelines/Pipeline.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), HttpModule],
+  imports: [ScheduleModule.forRoot(), PipelineModule],
   providers: [ImportProductsService],
   exports: [],
 })

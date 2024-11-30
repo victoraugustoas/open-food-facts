@@ -2,7 +2,7 @@ import { Result } from './Result';
 import { v4 as uuidV4 } from 'uuid';
 
 export class Identity {
-  protected id: string;
+  id: string;
 
   constructor(id?: string) {
     this.id = id ? id : uuidV4();
