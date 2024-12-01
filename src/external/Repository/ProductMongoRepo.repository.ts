@@ -26,11 +26,41 @@ export class ProductMongoRepo extends ProductRepository {
   }
 
   async getByCode(code: string): Promise<Result<Product>> {
-    const product = await this.productModel.findOne({ code: code }).exec();
+    const product = await this.productModel
+      .findOne({ code: code }, undefined, {
+        session: this.mongoUnityOfWork.session,
+      })
+      .exec();
     if (!product) {
       return Result.fail({ type: 'product_not_found', details: { code } });
     }
-    return Product.new({ ...product });
+
+    return Product.new({
+      code: product.code,
+      categories: product.categories,
+      labels: product.labels,
+      cities: product.cities,
+      purchase_places: product.purchase_places,
+      traces: product.traces,
+      image_url: product.image_url,
+      product_name: product.product_name,
+      status: product.status,
+      url: product.url,
+      created_t: product.created_t,
+      last_modified_t: product.last_modified_t,
+      ingredients_text: product.ingredients_text,
+      id: product.id,
+      imported_t: product.imported_t,
+      brands: product.brands,
+      creator: product.creator,
+      main_category: product.main_category,
+      nutriscore_grade: product.nutriscore_grade,
+      nutriscore_score: product.nutriscore_score,
+      quantity: product.quantity,
+      serving_quantity: product.serving_quantity,
+      stores: product.stores,
+      serving_size: product.serving_size,
+    });
   }
 
   async save(product: Product): Promise<Result<void>> {
@@ -56,7 +86,11 @@ export class ProductMongoRepo extends ProductRepository {
         ...props,
         _id: undefined,
       });
-      const exists = await this.productModel.findOne({ id: product.id });
+      const exists = await this.productModel.findOne(
+        { id: product.id },
+        undefined,
+        { session: this.mongoUnityOfWork.session },
+      );
       if (exists) {
         await newProductDb.updateOne(
           { id: product.id },

@@ -38,7 +38,7 @@ export class Product implements ProductProps {
   @Prop()
   purchase_places: string[];
   @Prop()
-  stores: 'Lidl';
+  stores: string;
   @Prop()
   ingredients_text: string;
   @Prop()

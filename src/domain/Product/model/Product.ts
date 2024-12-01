@@ -35,7 +35,7 @@ export interface ProductProps extends EntityProps {
   labels: string[];
   cities: string[];
   purchase_places: string[];
-  stores: 'Lidl';
+  stores: string;
   ingredients_text: string;
   traces: string[];
   serving_size: string;

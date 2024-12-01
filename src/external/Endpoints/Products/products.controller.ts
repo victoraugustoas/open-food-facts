@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Controller,
   Delete,
+  Get,
   NotFoundException,
   Param,
 } from '@nestjs/common';
@@ -14,6 +15,8 @@ import * as Mongo from '../../Database/schemas/Product.schema';
 import { ProductRepository } from '../../../domain/Product/repository/Product.repository';
 import { Result } from '../../../domain/common/base/Result';
 import { Error } from '../../../domain/common/base/Error';
+import { GetProduct } from '../../../domain/Product/usecases/GetProduct';
+import { ProductMapper } from './Product.mapper';
 
 @Controller('products')
 export class ProductsController {
@@ -34,6 +37,19 @@ export class ProductsController {
     const useCase = new DeleteProduct(productRepo);
     const result = await useCase.execute({ productCode: code });
     this.handleErrors(result);
+  }
+
+  @Get(':code')
+  async getProduct(@Param('code') code: string) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    const productRepo: ProductRepository = new ProductMongoRepo(
+      this.productModel,
+      unityOfWork,
+    );
+    const useCase = new GetProduct(productRepo);
+    const result = await useCase.execute({ productCode: code });
+    this.handleErrors(result);
+    return new ProductMapper().toJSON(result.instance.product);
   }
 
   private catchException(error: Error) {
