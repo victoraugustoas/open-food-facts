@@ -50,7 +50,7 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
   protected constructor(
     readonly id: ProductID,
     readonly imported_t: Date,
-    readonly status: ProductStatus,
+    private _status: ProductStatus,
     readonly categories: Category[],
     readonly labels: Label[],
     readonly cities: City[],
@@ -61,6 +61,10 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
     readonly imageUrl?: Url,
   ) {
     super(id, props);
+  }
+
+  get status(): ProductStatus {
+    return this._status;
   }
 
   static new(props: ProductProps): Result<Product> {
@@ -121,5 +125,9 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
 
   copyWith(props: Partial<ProductProps>): Result<Product> {
     return Product.new({ ...this.props, ...props });
+  }
+
+  public delete() {
+    this._status = ProductStatus.trash;
   }
 }

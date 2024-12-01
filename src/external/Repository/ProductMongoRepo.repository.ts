@@ -25,12 +25,12 @@ export class ProductMongoRepo extends ProductRepository {
     super();
   }
 
-  getByCode(code: string): Promise<Result<number>> {
-    throw new Error('Method not implemented.');
-  }
-
-  delete(product: Product): Promise<Result<void>> {
-    throw new Error('Method not implemented.');
+  async getByCode(code: string): Promise<Result<Product>> {
+    const product = await this.productModel.findOne({ code: code }).exec();
+    if (!product) {
+      return Result.fail({ type: 'product_not_found', details: { code } });
+    }
+    return Product.new({ ...product });
   }
 
   async save(product: Product): Promise<Result<void>> {

@@ -9,10 +9,8 @@ interface OUT {
   product: Product;
 }
 
-export class CreateNewProduct extends UseCase<IN, OUT> {
-  constructor(private readonly productRepository: ProductRepository) {
-    super();
-  }
+export class CreateNewProduct implements UseCase<IN, OUT> {
+  constructor(private readonly productRepository: ProductRepository) {}
 
   async execute(args: IN): Promise<Result<OUT>> {
     const product = Product.new(args);

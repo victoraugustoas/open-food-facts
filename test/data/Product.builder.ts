@@ -55,6 +55,16 @@ export class ProductBuilder extends Builder<Product, ProductProps> {
     return this.props;
   }
 
+  withProductStatus(value: ProductStatus): this {
+    this.props.status = value;
+    return this;
+  }
+
+  withCode(value: string): this {
+    this.props.code = value;
+    return this;
+  }
+
   build(): Result<Product> {
     return Product.new(this.props);
   }
