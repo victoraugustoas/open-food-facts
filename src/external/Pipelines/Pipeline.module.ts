@@ -4,25 +4,11 @@ import { DownloadDeltaFileIndex } from './pipes/DownloadDeltaFileIndex';
 import { DownloadDeltaFile } from './pipes/DownloadDeltaFile';
 import { HttpModule } from '@nestjs/axios';
 import { ValidateAndInsertProducts } from './pipes/ValidateAndInsertProducts';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  ImportedFile,
-  ImportedFileSchema,
-} from '../Database/schemas/ImportedFile.schema';
-import { Product, ProductSchema } from '../Database/schemas/Product.schema';
 import { UnzipFile } from './pipes/UnzipFile';
-import { RepositoryModule } from '../Repository/repository.module';
+import { MongoModule } from '../Database/mongo.module';
 
 @Module({
-  imports: [
-    EventEmitterModule.forRoot(),
-    HttpModule,
-    MongooseModule.forFeature([
-      { name: ImportedFile.name, schema: ImportedFileSchema },
-      { name: Product.name, schema: ProductSchema },
-    ]),
-    RepositoryModule,
-  ],
+  imports: [EventEmitterModule.forRoot(), HttpModule, MongoModule],
   providers: [
     DownloadDeltaFileIndex,
     DownloadDeltaFile,

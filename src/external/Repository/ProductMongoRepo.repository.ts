@@ -6,7 +6,6 @@ import {
 } from 'src/domain/Product/model/Product';
 import { ProductRepository } from '../../domain/Product/repository/Product.repository';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as Mongo from '../Database/schemas/Product.schema';
 import { VO } from '../../domain/common/base/ValueObject';
@@ -15,12 +14,13 @@ import { MarketStore } from '../../domain/Product/model/MarketStore';
 import { Category } from '../../domain/Product/model/Category';
 import { Label } from '../../domain/Product/model/Label';
 import { Trace } from '../../domain/Product/model/Trace';
+import { MongoUnityOfWork } from '../common/implementation/MongoUnityOfWork';
 
 @Injectable()
 export class ProductMongoRepo extends ProductRepository {
   constructor(
-    @InjectModel(Mongo.Product.name)
-    private importedFileModel: Model<Mongo.Product>,
+    private productModel: Model<Mongo.Product>,
+    private readonly mongoUnityOfWork: MongoUnityOfWork,
   ) {
     super();
   }
@@ -52,16 +52,21 @@ export class ProductMongoRepo extends ProductRepository {
         traces: product.traces.map(this.fromValueObjectToValue<Trace, string>),
         image_url: product.imageUrl?.value.toString(),
       };
-      const newProductDb = new this.importedFileModel({
+      const newProductDb = new this.productModel({
         ...props,
         _id: undefined,
       });
-      const exists = await this.importedFileModel.findOne({ id: product.id });
+      const exists = await this.productModel.findOne({ id: product.id });
       if (exists) {
-        await newProductDb.updateOne({ id: product.id });
+        await newProductDb.updateOne(
+          { id: product.id },
+          { session: this.mongoUnityOfWork.session },
+        );
         return Result.ok();
       } else {
-        await newProductDb.save();
+        await newProductDb.save({
+          session: this.mongoUnityOfWork.session,
+        });
         return Result.ok();
       }
     } catch (e) {

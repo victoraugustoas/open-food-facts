@@ -4,11 +4,13 @@ import { ProductProps } from '../../../domain/Product/model/Product';
 import { Injectable, Logger } from '@nestjs/common';
 import { CreatedDeltaFileEvent } from '../events/CreatedDeltaFile.event';
 import { OnEvent } from '@nestjs/event-emitter';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { ImportedFile } from '../../Database/schemas/ImportedFile.schema';
 import mongoose, { Model } from 'mongoose';
 import { CreateNewProduct } from '../../../domain/Product/usecases/CreateNewProduct';
-import { ProductRepository } from '../../../domain/Product/repository/Product.repository';
+import { MongoUnityOfWork } from '../../common/implementation/MongoUnityOfWork';
+import { ProductMongoRepo } from '../../Repository/ProductMongoRepo.repository';
+import * as Mongo from '../../Database/schemas/Product.schema';
 
 @Injectable()
 export class ValidateAndInsertProducts {
@@ -17,12 +19,21 @@ export class ValidateAndInsertProducts {
   constructor(
     @InjectModel(ImportedFile.name)
     private readonly importedFileModel: Model<ImportedFile>,
-    private readonly productRepository: ProductRepository,
+    @InjectModel(Mongo.Product.name)
+    private productModel: Model<Mongo.Product>,
+    @InjectConnection()
+    private readonly connection: mongoose.Connection,
   ) {}
 
   @OnEvent(CreatedDeltaFileEvent.name)
   async importProducts(event: CreatedDeltaFileEvent) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    const productRepository = new ProductMongoRepo(
+      this.productModel,
+      unityOfWork,
+    );
     try {
+      await unityOfWork.begin();
       const importedFile = await this.importedFileModel.findOne({
         _id: new mongoose.Types.ObjectId(event.importId),
       });
@@ -46,9 +57,7 @@ export class ValidateAndInsertProducts {
         const parseLine = JSON.parse(line);
         const props = this.normalizeProduct(parseLine);
 
-        const createNewProductUseCase = new CreateNewProduct(
-          this.productRepository,
-        );
+        const createNewProductUseCase = new CreateNewProduct(productRepository);
         const created = await createNewProductUseCase.execute(props);
         if (created.wentWrong) {
           this.logger.error('Error in createNewProductUseCase', created.errors);
@@ -57,10 +66,12 @@ export class ValidateAndInsertProducts {
       }
 
       importedFile.wasProcessed = true;
-      await importedFile.save();
+      await importedFile.save({ session: unityOfWork.session });
 
+      await unityOfWork.commit();
       this.logger.debug(`Imported ${indexLine} products`);
     } catch (e) {
+      await unityOfWork.rollback();
       this.logger.error(e);
     }
   }
