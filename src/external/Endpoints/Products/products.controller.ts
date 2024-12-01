@@ -5,6 +5,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Query,
 } from '@nestjs/common';
 import { DeleteProduct } from '../../../domain/Product/usecases/DeleteProduct';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -17,6 +18,7 @@ import { Result } from '../../../domain/common/base/Result';
 import { Error } from '../../../domain/common/base/Error';
 import { GetProduct } from '../../../domain/Product/usecases/GetProduct';
 import { ProductMapper } from './Product.mapper';
+import { GetProducts } from '../../../domain/Product/usecases/GetProducts';
 
 @Controller('products')
 export class ProductsController {
@@ -50,6 +52,26 @@ export class ProductsController {
     const result = await useCase.execute({ productCode: code });
     this.handleErrors(result);
     return new ProductMapper().toJSON(result.instance.product);
+  }
+
+  @Get()
+  async getProducts(@Query('page') page = 0, @Query('limit') limit = 10) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    const productRepo: ProductRepository = new ProductMongoRepo(
+      this.productModel,
+      unityOfWork,
+    );
+    const useCase = new GetProducts(productRepo);
+    const result = await useCase.execute({ limit, page });
+    this.handleErrors(result);
+
+    const mapper = new ProductMapper().toJSON;
+    return {
+      page: result.instance.page,
+      limit: result.instance.limit,
+      total: result.instance.total,
+      data: result.instance.data.map((p) => mapper(p)),
+    };
   }
 
   private catchException(error: Error) {

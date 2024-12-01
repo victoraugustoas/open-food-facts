@@ -9,6 +9,7 @@ describe('DeleteProduct', () => {
 
   beforeEach(() => {
     ProductRepositoryMock = {
+      getProducts: jest.fn(),
       save: jest.fn(),
       getByCode: jest.fn(),
     };

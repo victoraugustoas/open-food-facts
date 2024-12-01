@@ -8,6 +8,7 @@ import { ProductRepository } from '../../domain/Product/repository/Product.repos
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import * as Mongo from '../Database/schemas/Product.schema';
+import { ProductDocument } from '../Database/schemas/Product.schema';
 import { VO } from '../../domain/common/base/ValueObject';
 import { City } from '../../domain/Product/model/Cities';
 import { MarketStore } from '../../domain/Product/model/MarketStore';
@@ -25,6 +26,29 @@ export class ProductMongoRepo extends ProductRepository {
     super();
   }
 
+  async getProducts(
+    page: number,
+    limit: number,
+  ): Promise<Result<{ products: Product[]; total: number }>> {
+    const total = await this.productModel
+      .countDocuments({}, { session: this.mongoUnityOfWork.session })
+      .exec();
+    const results = await this.productModel
+      .find({}, undefined, {
+        limit,
+        skip: page * limit,
+        session: this.mongoUnityOfWork.session,
+      })
+      .exec();
+    const productsProps = results.map((doc) =>
+      Product.new(this.mapDocToProductProps(doc)),
+    );
+    const products = Result.combine(productsProps);
+    if (products.wentWrong) return products.asFail;
+
+    return Result.ok({ products: products.instance, total });
+  }
+
   async getByCode(code: string): Promise<Result<Product>> {
     const product = await this.productModel
       .findOne({ code: code }, undefined, {
@@ -35,32 +59,7 @@ export class ProductMongoRepo extends ProductRepository {
       return Result.fail({ type: 'product_not_found', details: { code } });
     }
 
-    return Product.new({
-      code: product.code,
-      categories: product.categories,
-      labels: product.labels,
-      cities: product.cities,
-      purchase_places: product.purchase_places,
-      traces: product.traces,
-      image_url: product.image_url,
-      product_name: product.product_name,
-      status: product.status,
-      url: product.url,
-      created_t: product.created_t,
-      last_modified_t: product.last_modified_t,
-      ingredients_text: product.ingredients_text,
-      id: product.id,
-      imported_t: product.imported_t,
-      brands: product.brands,
-      creator: product.creator,
-      main_category: product.main_category,
-      nutriscore_grade: product.nutriscore_grade,
-      nutriscore_score: product.nutriscore_score,
-      quantity: product.quantity,
-      serving_quantity: product.serving_quantity,
-      stores: product.stores,
-      serving_size: product.serving_size,
-    });
+    return Product.new(this.mapDocToProductProps(product));
   }
 
   async save(product: Product): Promise<Result<void>> {
@@ -109,6 +108,35 @@ export class ProductMongoRepo extends ProductRepository {
         details: { error: e, product },
       });
     }
+  }
+
+  private mapDocToProductProps(document: ProductDocument): ProductProps {
+    return {
+      code: document.code,
+      categories: document.categories,
+      labels: document.labels,
+      cities: document.cities,
+      purchase_places: document.purchase_places,
+      traces: document.traces,
+      image_url: document.image_url,
+      product_name: document.product_name,
+      status: document.status,
+      url: document.url,
+      created_t: document.created_t,
+      last_modified_t: document.last_modified_t,
+      ingredients_text: document.ingredients_text,
+      id: document.id,
+      imported_t: document.imported_t,
+      brands: document.brands,
+      creator: document.creator,
+      main_category: document.main_category,
+      nutriscore_grade: document.nutriscore_grade,
+      nutriscore_score: document.nutriscore_score,
+      quantity: document.quantity,
+      serving_quantity: document.serving_quantity,
+      stores: document.stores,
+      serving_size: document.serving_size,
+    };
   }
 
   private fromValueObjectToValue<T extends VO<Y>, Y>(valueObject: T): Y {
