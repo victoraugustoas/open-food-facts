@@ -1,0 +1,12 @@
+services:
+  backend:
+    container_name: open-food-facts-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ${DOWNLOAD_DELTA_FILE_PATH}:${DOWNLOAD_DELTA_FILE_PATH}
+    env_file:
+      - .env
+    ports:
+      - ${PORT}:${PORT}

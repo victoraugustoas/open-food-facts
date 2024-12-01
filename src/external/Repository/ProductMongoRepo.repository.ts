@@ -94,7 +94,7 @@ export class ProductMongoRepo extends ProductRepository {
         await this.productModel
           .updateOne(
             { id: product.id },
-            { ...props },
+            { ...props, _id: undefined },
             {
               session: this.mongoUnityOfWork.session,
             },
