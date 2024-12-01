@@ -6,6 +6,7 @@ import { DownloadDeltaFileIndex } from '../Pipelines/pipes/DownloadDeltaFileInde
 
 @Injectable()
 export class ImportProductsService {
+  jobName = 'import_products_cron';
   private readonly logger = new Logger(ImportProductsService.name);
 
   constructor(
@@ -15,19 +16,28 @@ export class ImportProductsService {
     this.configureCronJob();
   }
 
+  getLastExecutionTime(): Date | null {
+    const cronJob = this.schedulerRegistry.getCronJob(this.jobName);
+    return cronJob.lastDate();
+  }
+
+  getNextExecutionTime(): Date {
+    const cronJob = this.schedulerRegistry.getCronJob(this.jobName);
+    return cronJob.nextDate().toJSDate();
+  }
+
   private configureCronJob() {
-    const jobName = 'import_products_cron';
     const cronPattern = process.env.IMPORT_PRODUCTS_CRON;
 
     const job = new CronJob(cronPattern, () =>
       this.downloadDeltaFileIndex.downloadDeltaFile(),
     );
 
-    this.schedulerRegistry.addCronJob(jobName, job);
+    this.schedulerRegistry.addCronJob(this.jobName, job);
     job.start();
 
     this.logger.log(
-      `job ${jobName} added using this cron pattern: ${cronPattern}`,
+      `job ${this.jobName} added using this cron pattern: ${cronPattern}`,
     );
   }
 }

@@ -6,6 +6,6 @@ import { PipelineModule } from '../Pipelines/Pipeline.module';
 @Module({
   imports: [ScheduleModule.forRoot(), PipelineModule],
   providers: [ImportProductsService],
-  exports: [],
+  exports: [ImportProductsService],
 })
 export class CronModule {}
