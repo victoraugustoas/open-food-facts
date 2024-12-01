@@ -1,7 +1,8 @@
-import { Product, ProductProps } from '../../../domain/Product/model/Product';
+import { Product } from '../../../domain/Product/model/Product';
+import { ProductDto } from './Product.dto';
 
 export class ProductMapper {
-  toJSON(product: Product): ProductProps {
+  toJSON(product: Product): ProductDto {
     return {
       ...product.props,
       url: product.url?.value.toString(),

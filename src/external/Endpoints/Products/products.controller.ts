@@ -4,6 +4,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -23,8 +25,11 @@ import { GetProduct } from '../../../domain/Product/usecases/GetProduct';
 import { ProductMapper } from './Product.mapper';
 import { GetProducts } from '../../../domain/Product/usecases/GetProducts';
 import { UpdateProduct } from '../../../domain/Product/usecases/UpdateProduct';
-import { ProductProps } from '../../../domain/Product/model/Product';
+import { ProductDto, UpdateProductDto } from './Product.dto';
+import { ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import { PageableResponse } from '../../common/types/Pageable';
 
+@ApiExtraModels(PageableResponse)
 @Controller('products')
 export class ProductsController {
   constructor(
@@ -35,10 +40,25 @@ export class ProductsController {
   ) {}
 
   @Get()
+  @ApiResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(PageableResponse) },
+        {
+          properties: {
+            data: {
+              type: 'array',
+              items: { $ref: getSchemaPath(ProductDto) },
+            },
+          },
+        },
+      ],
+    },
+  })
   async getProducts(
-    @Query('page', ParseIntPipe) page = 0,
-    @Query('limit', ParseIntPipe) limit = 10,
-  ) {
+    @Query('page', ParseIntPipe) page: number = 0,
+    @Query('limit', ParseIntPipe) limit: number = 10,
+  ): Promise<PageableResponse<ProductDto>> {
     const unityOfWork = new MongoUnityOfWork(this.connection);
     const productRepo: ProductRepository = new ProductMongoRepo(
       this.productModel,
@@ -58,6 +78,7 @@ export class ProductsController {
   }
 
   @Get(':code')
+  @ApiResponse({ type: ProductDto })
   async getProduct(@Param('code') code: string) {
     const unityOfWork = new MongoUnityOfWork(this.connection);
     const productRepo: ProductRepository = new ProductMongoRepo(
@@ -71,10 +92,11 @@ export class ProductsController {
   }
 
   @Put(':code')
+  @ApiResponse({ type: ProductDto })
   async updateProduct(
     @Param('code') code: string,
-    @Body() productParams: Partial<ProductProps>,
-  ) {
+    @Body() productParams: UpdateProductDto,
+  ): Promise<ProductDto> {
     const unityOfWork = new MongoUnityOfWork(this.connection);
     try {
       await unityOfWork.begin();
@@ -98,6 +120,7 @@ export class ProductsController {
   }
 
   @Delete(':code')
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteProduct(@Param('code') code: string) {
     const unityOfWork = new MongoUnityOfWork(this.connection);
     try {
