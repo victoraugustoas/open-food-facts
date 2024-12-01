@@ -60,6 +60,11 @@ export class ProductBuilder extends Builder<Product, ProductProps> {
     return this;
   }
 
+  withProductName(value: string): this {
+    this.props.product_name = value;
+    return this;
+  }
+
   withCode(value: string): this {
     this.props.code = value;
     return this;

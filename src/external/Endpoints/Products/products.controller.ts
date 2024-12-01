@@ -1,10 +1,13 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Delete,
   Get,
   NotFoundException,
   Param,
+  ParseIntPipe,
+  Put,
   Query,
 } from '@nestjs/common';
 import { DeleteProduct } from '../../../domain/Product/usecases/DeleteProduct';
@@ -19,6 +22,8 @@ import { Error } from '../../../domain/common/base/Error';
 import { GetProduct } from '../../../domain/Product/usecases/GetProduct';
 import { ProductMapper } from './Product.mapper';
 import { GetProducts } from '../../../domain/Product/usecases/GetProducts';
+import { UpdateProduct } from '../../../domain/Product/usecases/UpdateProduct';
+import { ProductProps } from '../../../domain/Product/model/Product';
 
 @Controller('products')
 export class ProductsController {
@@ -29,33 +34,11 @@ export class ProductsController {
     private readonly connection: mongoose.Connection,
   ) {}
 
-  @Delete(':code')
-  async deleteProduct(@Param('code') code: string) {
-    const unityOfWork = new MongoUnityOfWork(this.connection);
-    const productRepo: ProductRepository = new ProductMongoRepo(
-      this.productModel,
-      unityOfWork,
-    );
-    const useCase = new DeleteProduct(productRepo);
-    const result = await useCase.execute({ productCode: code });
-    this.handleErrors(result);
-  }
-
-  @Get(':code')
-  async getProduct(@Param('code') code: string) {
-    const unityOfWork = new MongoUnityOfWork(this.connection);
-    const productRepo: ProductRepository = new ProductMongoRepo(
-      this.productModel,
-      unityOfWork,
-    );
-    const useCase = new GetProduct(productRepo);
-    const result = await useCase.execute({ productCode: code });
-    this.handleErrors(result);
-    return new ProductMapper().toJSON(result.instance.product);
-  }
-
   @Get()
-  async getProducts(@Query('page') page = 0, @Query('limit') limit = 10) {
+  async getProducts(
+    @Query('page', ParseIntPipe) page = 0,
+    @Query('limit', ParseIntPipe) limit = 10,
+  ) {
     const unityOfWork = new MongoUnityOfWork(this.connection);
     const productRepo: ProductRepository = new ProductMongoRepo(
       this.productModel,
@@ -72,6 +55,65 @@ export class ProductsController {
       total: result.instance.total,
       data: result.instance.data.map((p) => mapper(p)),
     };
+  }
+
+  @Get(':code')
+  async getProduct(@Param('code') code: string) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    const productRepo: ProductRepository = new ProductMongoRepo(
+      this.productModel,
+      unityOfWork,
+    );
+    const useCase = new GetProduct(productRepo);
+    const result = await useCase.execute({ productCode: code });
+    this.handleErrors(result);
+    return new ProductMapper().toJSON(result.instance.product);
+  }
+
+  @Put(':code')
+  async updateProduct(
+    @Param('code') code: string,
+    @Body() productParams: Partial<ProductProps>,
+  ) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    try {
+      await unityOfWork.begin();
+      const productRepo: ProductRepository = new ProductMongoRepo(
+        this.productModel,
+        unityOfWork,
+      );
+      const useCase = new UpdateProduct(productRepo);
+      const result = await useCase.execute({
+        productCode: code,
+        productProps: productParams,
+      });
+      this.handleErrors(result);
+      await unityOfWork.commit();
+
+      return new ProductMapper().toJSON(result.instance);
+    } catch (e) {
+      await unityOfWork.rollback();
+      throw e;
+    }
+  }
+
+  @Delete(':code')
+  async deleteProduct(@Param('code') code: string) {
+    const unityOfWork = new MongoUnityOfWork(this.connection);
+    try {
+      await unityOfWork.begin();
+      const productRepo: ProductRepository = new ProductMongoRepo(
+        this.productModel,
+        unityOfWork,
+      );
+      const useCase = new DeleteProduct(productRepo);
+      const result = await useCase.execute({ productCode: code });
+      this.handleErrors(result);
+      await unityOfWork.commit();
+    } catch (e) {
+      await unityOfWork.rollback();
+      throw e;
+    }
   }
 
   private catchException(error: Error) {

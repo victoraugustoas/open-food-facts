@@ -91,10 +91,15 @@ export class ProductMongoRepo extends ProductRepository {
         { session: this.mongoUnityOfWork.session },
       );
       if (exists) {
-        await newProductDb.updateOne(
-          { id: product.id },
-          { session: this.mongoUnityOfWork.session },
-        );
+        await this.productModel
+          .updateOne(
+            { id: product.id },
+            { ...props },
+            {
+              session: this.mongoUnityOfWork.session,
+            },
+          )
+          .exec();
         return Result.ok();
       } else {
         await newProductDb.save({
