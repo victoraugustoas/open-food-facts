@@ -1,4 +1,4 @@
-import { ProductRepository } from '../repository/Product.repository';
+import { ProductRepository } from '../provider/Product.repository';
 import { GetProducts } from './GetProducts';
 import { ProductBuilder } from '../../../../test/data/Product.builder';
 import { Result } from '../../common/base/Result';

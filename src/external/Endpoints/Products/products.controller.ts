@@ -18,7 +18,7 @@ import mongoose, { Model } from 'mongoose';
 import { MongoUnityOfWork } from '../../common/implementation/MongoUnityOfWork';
 import { ProductMongoRepo } from '../../Repository/ProductMongoRepo.repository';
 import * as Mongo from '../../Database/schemas/Product.schema';
-import { ProductRepository } from '../../../domain/Product/repository/Product.repository';
+import { ProductRepository } from '../../../domain/Product/provider/Product.repository';
 import { Result } from '../../../domain/common/base/Result';
 import { Error } from '../../../domain/common/base/Error';
 import { GetProduct } from '../../../domain/Product/usecases/GetProduct';

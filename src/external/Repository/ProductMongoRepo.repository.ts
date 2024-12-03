@@ -1,10 +1,4 @@
-import { Result } from 'src/domain/common/base/Result';
-import {
-  Product,
-  ProductProps,
-  ProductStatus,
-} from 'src/domain/Product/model/Product';
-import { ProductRepository } from '../../domain/Product/repository/Product.repository';
+import { ProductRepository } from '../../domain/Product/provider/Product.repository';
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import * as Mongo from '../Database/schemas/Product.schema';
@@ -16,6 +10,12 @@ import { Category } from '../../domain/Product/model/Category';
 import { Label } from '../../domain/Product/model/Label';
 import { Trace } from '../../domain/Product/model/Trace';
 import { MongoUnityOfWork } from '../common/implementation/MongoUnityOfWork';
+import { Result } from '../../domain/common/base/Result';
+import {
+  Product,
+  ProductProps,
+  ProductStatus,
+} from '../../domain/Product/model/Product';
 
 @Injectable()
 export class ProductMongoRepo extends ProductRepository {
@@ -31,10 +31,13 @@ export class ProductMongoRepo extends ProductRepository {
     limit: number,
   ): Promise<Result<{ products: Product[]; total: number }>> {
     const total = await this.productModel
-      .countDocuments({}, { session: this.mongoUnityOfWork.session })
+      .countDocuments(
+        { status: ProductStatus.published },
+        { session: this.mongoUnityOfWork.session },
+      )
       .exec();
     const results = await this.productModel
-      .find({}, undefined, {
+      .find({ status: ProductStatus.published }, undefined, {
         limit,
         skip: page * limit,
         session: this.mongoUnityOfWork.session,

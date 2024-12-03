@@ -67,6 +67,10 @@ export class Product extends Entity<Product, ProductID, ProductProps> {
     return this._status;
   }
 
+  get isVisible(): boolean {
+    return this._status === ProductStatus.published;
+  }
+
   static new(props: ProductProps): Result<Product> {
     try {
       const created_t = Timestamp.new(props.created_t);

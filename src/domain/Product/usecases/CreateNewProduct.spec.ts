@@ -1,5 +1,5 @@
 import { ProductBuilder } from '../../../../test/data/Product.builder';
-import { ProductRepository } from '../repository/Product.repository';
+import { ProductRepository } from '../provider/Product.repository';
 import { CreateNewProduct } from './CreateNewProduct';
 import { Result } from '../../common/base/Result';
 
