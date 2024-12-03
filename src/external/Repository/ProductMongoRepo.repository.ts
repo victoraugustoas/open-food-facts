@@ -1,9 +1,3 @@
-import { Result } from 'src/domain/common/base/Result';
-import {
-  Product,
-  ProductProps,
-  ProductStatus,
-} from 'src/domain/Product/model/Product';
 import { ProductRepository } from '../../domain/Product/repository/Product.repository';
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
@@ -16,6 +10,12 @@ import { Category } from '../../domain/Product/model/Category';
 import { Label } from '../../domain/Product/model/Label';
 import { Trace } from '../../domain/Product/model/Trace';
 import { MongoUnityOfWork } from '../common/implementation/MongoUnityOfWork';
+import { Result } from '../../domain/common/base/Result';
+import {
+  Product,
+  ProductProps,
+  ProductStatus,
+} from '../../domain/Product/model/Product';
 
 @Injectable()
 export class ProductMongoRepo extends ProductRepository {
