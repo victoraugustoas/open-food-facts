@@ -1,4 +1,4 @@
-import { ProductRepository } from '../../domain/Product/repository/Product.repository';
+import { ProductRepository } from '../../domain/Product/provider/Product.repository';
 import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import * as Mongo from '../Database/schemas/Product.schema';

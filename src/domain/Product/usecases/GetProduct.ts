@@ -1,6 +1,6 @@
 import { Product } from '../model/Product';
 import { UseCase } from '../../common/base/UseCase';
-import { ProductRepository } from '../repository/Product.repository';
+import { ProductRepository } from '../provider/Product.repository';
 import { Result } from '../../common/base/Result';
 
 interface IN {
