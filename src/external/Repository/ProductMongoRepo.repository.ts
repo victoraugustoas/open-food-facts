@@ -31,10 +31,13 @@ export class ProductMongoRepo extends ProductRepository {
     limit: number,
   ): Promise<Result<{ products: Product[]; total: number }>> {
     const total = await this.productModel
-      .countDocuments({}, { session: this.mongoUnityOfWork.session })
+      .countDocuments(
+        { status: ProductStatus.published },
+        { session: this.mongoUnityOfWork.session },
+      )
       .exec();
     const results = await this.productModel
-      .find({}, undefined, {
+      .find({ status: ProductStatus.published }, undefined, {
         limit,
         skip: page * limit,
         session: this.mongoUnityOfWork.session,

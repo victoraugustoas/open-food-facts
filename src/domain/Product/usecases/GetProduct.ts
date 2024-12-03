@@ -17,6 +17,13 @@ export class GetProduct implements UseCase<IN, OUT> {
   async execute(args: IN): Promise<Result<OUT>> {
     const product = await this.productRepository.getByCode(args.productCode);
     if (product.wentWrong) return product.asFail;
-    return Result.ok({ product: product.instance });
+    if (product.instance.isVisible) {
+      return Result.ok({ product: product.instance });
+    } else {
+      return Result.fail({
+        type: 'product_not_found',
+        details: { ...args },
+      });
+    }
   }
 }
